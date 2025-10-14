@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Sales Reports - FidPOS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="text-center mb-4 text-pink fw-bold">📊 Sales Reports</h2>
+
+  <!-- Report Filters (optional) -->
+  <div class="card shadow-sm p-3 mb-4 border-0 rounded-3">
+    <h5 class="text-pink">📅 Filter Reports</h5>
+    <form id="filterForm" class="row g-3">
+      <div class="col-md-4">
+        <label>Start Date</label>
+        <input type="date" class="form-control" id="startDate" name="startDate">
+      </div>
+      <div class="col-md-4">
+        <label>End Date</label>
+        <input type="date" class="form-control" id="endDate" name="endDate">
+      </div>
+      <div class="col-md-4 d-flex align-items-end">
+        <button type="button" id="filterBtn" class="btn btn-pink w-100 fw-bold">Apply Filter</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Reports Table -->
+  <div class="card shadow-sm border-0 rounded-3 mb-4">
+    <div class="card-header bg-pink text-white fw-bold">💰 Sales Summary</div>
+    <div class="card-body">
+      <table class="table table-bordered table-striped text-center align-middle" id="salesTable">
+        <thead class="table-dark">
+          <tr>
+            <th>ID</th>
+            <th>Item</th>
+            <th>Total (KSh)</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="salesBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Chart Section -->
+  <div class="card shadow-sm border-0 rounded-3">
+    <div class="card-header bg-pink text-white fw-bold">📈 Sales Chart</div>
+    <div class="card-body">
+      <canvas id="salesChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  async function loadReports() {
+    const res = await fetch("/reports/data");
+    const data = await res.json();
+
+    const tableBody = document.getElementById("salesBody");
+    tableBody.innerHTML = "";
+
+    const labels = [];
+    const totals = [];
+
+    data.forEach(sale => {
+      labels.push(sale.item);
+      totals.push(sale.total);
+
+      const row = `
+        <tr>
+          <td>${sale.id}</td>
+          <td>${sale.item}</td>
+          <td>${sale.total.toLocaleString()}</td>
+          <td>${sale.date}</td>
+        </tr>
+      `;
+      tableBody.insertAdjacentHTML("beforeend", row);
+    });
+
+    const ctx = document.getElementById("salesChart").getContext("2d");
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "Total Sales (KSh)",
+          data: totals,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", loadReports);
+</script>
+{% endblock %}
