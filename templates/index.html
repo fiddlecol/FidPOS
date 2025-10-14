@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - FidPOS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="text-center fw-bold mb-4 text-pink">📊 FidPOS Dashboard</h2>
+
+  <!-- Summary Cards -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 rounded-3 text-center p-3 bg-light">
+        <h5 class="text-pink fw-bold">🧴 Categories</h5>
+        <h2 class="fw-bold">{{ total_items }}</h2>
+        <p class="text-muted">Total Items</p>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 rounded-3 text-center p-3 bg-light">
+        <h5 class="text-pink fw-bold">📦 Stock</h5>
+        <h2 class="fw-bold">{{ total_stock }}</h2>
+        <p class="text-muted">Total Items in Stock</p>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 rounded-3 text-center p-3 bg-light">
+        <h5 class="text-pink fw-bold">💰 Sales</h5>
+        <h2 class="fw-bold">{{ total_sales }}</h2>
+        <p class="text-muted">Transactions Recorded</p>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 rounded-3 text-center p-3 bg-light">
+        <h5 class="text-pink fw-bold">📈 Revenue</h5>
+        <h2 class="fw-bold">KSh {{ "%.2f"|format(total_revenue) }}</h2>
+        <p class="text-muted">Total Earned</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Cards -->
+  <div class="row g-4 text-center">
+    <div class="col-md-3">
+      <a href="/categories" class="text-decoration-none">
+        <div class="card hover-card shadow-sm border-0 p-4">
+          <h4 class="text-pink fw-bold">🧾 Categories</h4>
+          <p class="text-muted mb-0">Manage product types</p>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-3">
+      <a href="/items" class="text-decoration-none">
+        <div class="card hover-card shadow-sm border-0 p-4">
+          <h4 class="text-pink fw-bold">📋 Items</h4>
+          <p class="text-muted mb-0">Add & edit inventory</p>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-3">
+      <a href="/pos" class="text-decoration-none">
+        <div class="card hover-card shadow-sm border-0 p-4">
+          <h4 class="text-pink fw-bold">💳 POS</h4>
+          <p class="text-muted mb-0">Record new sales</p>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-3">
+      <a href="/reports" class="text-decoration-none">
+        <div class="card hover-card shadow-sm border-0 p-4">
+          <h4 class="text-pink fw-bold">📑 Reports</h4>
+          <p class="text-muted mb-0">View daily sales</p>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .hover-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3);
+  }
+  .text-pink {
+    color: #ff2e88 !important;
+  }
+  .bg-pink {
+    background-color: #ff2e88 !important;
+  }
+</style>
+{% endblock %}

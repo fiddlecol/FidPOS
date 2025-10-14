@@ -1,0 +1,12 @@
+Flask==2.3.2
+Flask-Cors==3.0.10
+Flask-SQLAlchemy==3.1.1
+Flask-APScheduler==1.13.1
+python-dotenv==1.0.1
+python-escpos==3.0.0
+python-barcode==0.15.1
+gunicorn==20.1.0
+pytz==2024.1
+SQLAlchemy==2.0.20
+APScheduler==3.10.2
+Werkzeug==3.0.2

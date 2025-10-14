@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Receipt - {{ shop_name }}</title>
+  <style>
+    body { font-family: monospace; text-align: center; margin: 30px; }
+    .receipt { border: 1px dashed #000; padding: 15px; display: inline-block; }
+    .shop { font-weight: bold; margin-bottom: 10px; color: #e91e63; }
+  </style>
+</head>
+<body>
+  <div class="receipt">
+    <div class="shop">{{ shop_name }}</div>
+    <div>Date: {{ date.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+    <hr>
+    <p>Item: {{ sale.item_name }}</p>
+    <p>Barcode: {{ sale.barcode }}</p>
+    <p>Price: Ksh {{ sale.price }}</p>
+    <p>Qty: {{ sale.quantity }}</p>
+    <hr>
+    <h4>Total: Ksh {{ sale.total }}</h4>
+    <p>Thank you for shopping!</p>
+  </div>
+</body>
+</html>

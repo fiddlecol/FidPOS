@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Manage Items - FidPOS{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="text-center mb-4 text-pink fw-bold">🛒 Manage Shop Items</h2>
+
+  <!-- Add Item Form -->
+  <div class="card shadow-sm p-3 mb-4 border-0 rounded-3">
+    <h5 class="text-pink">➕ Add New Item</h5>
+    <form id="addItemForm" class="row g-3">
+      <div class="col-md-4">
+        <label>Barcode</label>
+        <input type="text" class="form-control" id="barcode" name="barcode" placeholder="Scan or enter barcode" required>
+      </div>
+      <div class="col-md-4">
+        <label>Item Name</label>
+        <input type="text" class="form-control" id="name" name="name" required>
+      </div>
+      <div class="col-md-4">
+        <label>Category</label>
+        <select class="form-select" id="category_id" name="category_id">
+          <option value="">-- Select Category --</option>
+          {% for cat in categories %}
+          <option value="{{ cat.id }}">{{ cat.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label>Price (KSh)</label>
+        <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+      </div>
+      <div class="col-md-3">
+        <label>Quantity</label>
+        <input type="number" class="form-control" id="quantity" name="quantity" required>
+      </div>
+      <div class="col-md-6 d-flex align-items-end">
+        <button type="submit" class="btn btn-pink w-100 fw-bold">Add Item</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Items Table -->
+  <div class="card shadow-sm border-0 rounded-3">
+    <div class="card-header bg-pink text-white fw-bold">📦 Current Stock</div>
+    <div class="card-body">
+      <table class="table table-bordered table-striped text-center align-middle" id="itemsTable">
+        <thead class="table-dark">
+          <tr>
+            <th>Barcode</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Qty</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="itemsBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/pos.js"></script>
+{% endblock %}

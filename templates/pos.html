@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}FidPOS - Point of Sale{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="text-center fw-bold text-pink mb-4">💄 FidPOS - Beauty Shop Sales</h2>
+
+  <!-- Scanner / Input -->
+  <div class="card shadow-sm border-0 p-3 mb-3 rounded-3">
+    <div class="row align-items-end g-2">
+      <div class="col-md-6">
+        <label class="fw-bold">Scan Barcode</label>
+        <input type="text" id="scanInput" class="form-control" placeholder="Scan or type barcode">
+      </div>
+      <div class="col-md-3">
+        <label class="fw-bold">Quantity</label>
+        <input type="number" id="scanQty" class="form-control" value="1" min="1">
+      </div>
+      <div class="col-md-3 d-grid">
+        <button id="addToCartBtn" class="btn btn-pink fw-bold">Add to Cart</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Table -->
+  <div class="card shadow-sm border-0 rounded-3">
+    <div class="card-header bg-pink text-white fw-bold">🛍️ Current Cart</div>
+    <div class="card-body">
+      <table class="table table-bordered text-center align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th>Barcode</th>
+            <th>Item Name</th>
+            <th>Price (KSh)</th>
+            <th>Qty</th>
+            <th>Total</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="cartBody"></tbody>
+      </table>
+      <div class="d-flex justify-content-end">
+        <h4 class="fw-bold">Total: <span id="cartTotal" class="text-pink">0.00</span> KSh</h4>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout -->
+  <div class="mt-4 text-end">
+    <button id="checkoutBtn" class="btn btn-dark fw-bold px-4">🧾 Checkout & Print</button>
+  </div>
+</div>
+
+<script src="/static/js/pos.js"></script>
+{% endblock %}

@@ -1,0 +1,11 @@
+/*css for items.html with pink color scheme */
+.text-pink { color: #e91e63; }
+.bg-pink { background-color: #e91e63; }
+.btn-pink { background-color: #e91e63; color: white; }
+.btn-pink:hover { background-color: #d81b60; color: #fff; }
+
+/*css for pos.html color scheme */
+input:focus {
+  border-color: #e91e63 !important;
+  box-shadow: 0 0 0 0.25rem rgba(233, 30, 99, 0.25);
+}

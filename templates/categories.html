@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Categories - FidPOS{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="text-center mb-4 text-pink fw-bold">🧴 Manage Categories</h2>
+
+  <!-- Add Category Form -->
+  <div class="card shadow-sm p-3 mb-4 border-0 rounded-3">
+    <h5 class="text-pink">➕ Add New Category</h5>
+    <form id="addCategoryForm" class="d-flex gap-2">
+      <input type="text" class="form-control" id="name" name="name" placeholder="Category name" required>
+      <button type="submit" class="btn btn-pink fw-bold">Add</button>
+    </form>
+  </div>
+
+  <!-- Category Table -->
+  <div class="card shadow-sm border-0 rounded-3">
+    <div class="card-header bg-pink text-white fw-bold">📂 Category List</div>
+    <div class="card-body">
+      <table class="table table-bordered table-striped text-center align-middle" id="categoriesTable">
+        <thead class="table-dark">
+          <tr>
+            <th>ID</th>
+            <th>Category Name</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="categoriesBody">
+          {% for cat in categories %}
+          <tr>
+            <td>{{ cat.id }}</td>
+            <td>{{ cat.name }}</td>
+            <td>
+              <button class="btn btn-sm btn-warning edit-btn" data-id="{{ cat.id }}">✏️</button>
+              <button class="btn btn-sm btn-danger delete-btn" data-id="{{ cat.id }}">🗑️</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/categories.js"></script>
+{% endblock %}
