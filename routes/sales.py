@@ -1,7 +1,10 @@
 # routes/sales.py
 from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for
 from models import db, Item, Sale
-from datetime import datetime
+from datetime import datetime, timedelta
+from pytz import timezone
+
+EAT = timezone("Africa/Nairobi")
 
 bp = Blueprint("sales", __name__, url_prefix="/sales")
 
@@ -86,15 +89,14 @@ def sales_data():
 
     if start_date_str:
         try:
-            start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+            start_date = EAT.localize(datetime.strptime(start_date_str, "%Y-%m-%d"))
             query = query.filter(Sale.sold_at >= start_date)
         except ValueError:
             pass
 
     if end_date_str:
         try:
-            # Add 1 day so the end date is inclusive
-            end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1)
+            end_date = EAT.localize(datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1))
             query = query.filter(Sale.sold_at < end_date)
         except ValueError:
             pass
@@ -111,4 +113,3 @@ def sales_data():
         for s in sales
     ]
     return jsonify(data), 200
-
