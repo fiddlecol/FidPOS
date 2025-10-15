@@ -107,3 +107,45 @@ def lookup_item(barcode):
 def manage_items_page():
     categories = Category.query.all()
     return render_template("items.html", categories=categories)
+
+# 🛒 Checkout route
+@bp.route("/checkout", methods=["POST"])
+def checkout():
+    data = request.get_json() or {}
+    items = data.get("items", [])
+
+    if not items:
+        return jsonify({"error": "Cart is empty"}), 400
+
+    total = 0
+    receipt_lines = []
+
+    for i in items:
+        try:
+            qty = int(i.get("qty", 0))
+            price = float(i.get("price", 0))
+            name = i.get("name", "Unknown Item")
+
+            if qty <= 0 or price < 0:
+                continue
+
+            line_total = qty * price
+            total += line_total
+            receipt_lines.append(f"<li>{name} x{qty} = {line_total:.2f} KSh</li>")
+
+            # Optional: reduce stock in DB
+            item_in_db = Item.query.filter_by(barcode=i.get("barcode")).first()
+            if item_in_db:
+                item_in_db.quantity = max(item_in_db.quantity - qty, 0)
+        except Exception as e:
+            print(f"Skipping invalid item in cart: {i}, error: {e}")
+
+    # Commit stock changes
+    db.session.commit()
+
+    # Generate receipt HTML
+    receipt_html = "<h2>FidPOS Receipt</h2><ul>"
+    receipt_html += "".join(receipt_lines)
+    receipt_html += f"</ul><strong>Total: {total:.2f} KSh</strong>"
+
+    return jsonify({"receiptHtml": receipt_html}), 200

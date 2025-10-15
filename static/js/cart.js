@@ -2,9 +2,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const addToCartBtn = document.getElementById("addToCartBtn");
   const cartBody = document.getElementById("cartBody");
   const cartTotalEl = document.getElementById("cartTotal");
+  const checkoutBtn = document.getElementById("checkoutBtn");
 
   let cart = [];
 
+  // ➕ Add to Cart
   addToCartBtn.addEventListener("click", async () => {
     const barcode = document.getElementById("scanInput").value.trim();
     const qty = parseInt(document.getElementById("scanQty").value);
@@ -43,6 +45,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // 🧾 Checkout & Print
+  checkoutBtn.addEventListener("click", async () => {
+    if (cart.length === 0) {
+      alert("🛑 Cart is empty!");
+      return;
+    }
+
+    try {
+      const res = await fetch("/items/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: cart })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        // ✅ Open receipt in new window and print
+        const receiptWindow = window.open("", "_blank");
+        receiptWindow.document.write(data.receiptHtml);
+        receiptWindow.document.close();
+        receiptWindow.print();
+
+        // Clear cart after checkout
+        cart = [];
+        renderCart();
+      } else {
+        alert("⚠️ " + (data.error || "Checkout failed"));
+      }
+    } catch (err) {
+      console.error("❌ Checkout error:", err);
+      alert("❌ Something went wrong. Check console.");
+    }
+  });
+
+  // 🔁 Render Cart
   function renderCart() {
     cartBody.innerHTML = "";
     let total = 0;
