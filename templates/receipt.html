@@ -11,15 +11,47 @@
       margin: 0;
       padding: 0;
     }
-    .receipt { width: 230px; margin: 0 auto; padding: 10px; }
-    .shop { font-size: 16px; font-weight: bold; margin-bottom: 4px; }
-    hr { border: none; border-top: 1px dashed #000; margin: 6px 0; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    td { padding: 2px 0; text-align: left; }
-    .right { text-align: right; }
-    .total { font-weight: bold; font-size: 15px; margin-top: 6px; }
-    .time { font-size: 11px; margin-top: 10px; color: #555; }
-    @media print { body { margin: 0; } .receipt { border: none; width: 100%; } }
+    .receipt {
+      width: 230px;
+      margin: 0 auto;
+      padding: 10px;
+    }
+    .shop {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    hr {
+      border: none;
+      border-top: 1px dashed #000;
+      margin: 6px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      text-align: left;
+      padding: 2px 0;
+    }
+    th.right, td.right {
+      text-align: right;
+    }
+    .total {
+      font-weight: bold;
+      font-size: 15px;
+      margin-top: 6px;
+    }
+    .time {
+      font-size: 11px;
+      margin-top: 10px;
+      color: #555;
+    }
+    @media print {
+      body { margin: 0; }
+      .receipt { border: none; width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -28,13 +60,20 @@
     <hr>
     <table>
       <thead>
-        <tr><td>Item</td><td class="right">Total</td></tr>
+        <tr>
+          <th>Item</th>
+          <th class="right">Qty</th>
+          <th class="right">Price</th>
+          <th class="right">Total</th>
+        </tr>
       </thead>
       <tbody>
         {% for item in items %}
         <tr>
-          <td>{{ item.name }} (x{{ item.quantity }})</td>
-          <td class="right">{{ "%.2f"|format(item.price * item.quantity) }}</td>
+          <td>{{ item.item_name }}</td>
+          <td class="right">{{ item.quantity }}</td>
+          <td class="right">{{ "%.2f"|format(item.price) }}</td>
+          <td class="right">{{ "%.2f"|format(item.total) }}</td>
         </tr>
         {% endfor %}
       </tbody>
