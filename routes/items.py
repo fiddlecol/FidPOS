@@ -119,28 +119,34 @@ def checkout():
 
     total = 0
     receipt_lines = []
+    adjusted_cart = []
 
     for i in items:
-        try:
-            qty = int(i.get("qty", 0))
-            price = float(i.get("price", 0))
-            name = i.get("name", "Unknown Item")
+        barcode = i.get("barcode")
+        qty = int(i.get("qty", 0))
+        item_in_db = Item.query.filter_by(barcode=barcode).first()
 
-            if qty <= 0 or price < 0:
-                continue
+        if not item_in_db:
+            continue  # skip unknown items
 
-            line_total = qty * price
-            total += line_total
-            receipt_lines.append(f"<li>{name} x{qty} = {line_total:.2f} KSh</li>")
+        # Cap quantity to available stock
+        actual_qty = min(qty, item_in_db.quantity)
+        if actual_qty <= 0:
+            continue  # skip if out of stock
 
-            # Optional: reduce stock in DB
-            item_in_db = Item.query.filter_by(barcode=i.get("barcode")).first()
-            if item_in_db:
-                item_in_db.quantity = max(item_in_db.quantity - qty, 0)
-        except Exception as e:
-            print(f"Skipping invalid item in cart: {i}, error: {e}")
+        price = float(item_in_db.price)
+        name = item_in_db.name
+        line_total = actual_qty * price
+        total += line_total
+        receipt_lines.append(f"<li>{name} x{actual_qty} = {line_total:.2f} KSh</li>")
 
-    # Commit stock changes
+        # Reduce stock
+        item_in_db.quantity -= actual_qty
+        adjusted_cart.append({"barcode": barcode, "qty": actual_qty, "name": name, "price": price})
+
+    if not adjusted_cart:
+        return jsonify({"error": "All items are out of stock or invalid"}), 400
+
     db.session.commit()
 
     # Generate receipt HTML
@@ -148,4 +154,4 @@ def checkout():
     receipt_html += "".join(receipt_lines)
     receipt_html += f"</ul><strong>Total: {total:.2f} KSh</strong>"
 
-    return jsonify({"receiptHtml": receipt_html}), 200
+    return jsonify({"receiptHtml": receipt_html, "itemsProcessed": adjusted_cart, "total": total}), 200
