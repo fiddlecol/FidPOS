@@ -1,6 +1,6 @@
 # routes/sales.py
 from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for
-from models import db, Item, Sale
+from models import db, Item, Sale, SaleTransaction
 from datetime import datetime, timedelta
 from pytz import timezone
 
@@ -69,9 +69,18 @@ def add_sale():
 # 🧾 Generate receipt (renders HTML receipt page)
 @bp.route("/receipt/<int:sale_id>")
 def receipt(sale_id):
-    sale = Sale.query.get_or_404(sale_id)
-    shop_name = "Kitere Beauty Shop"
-    return render_template("receipt.html", sale=sale, shop_name=shop_name, date=datetime.now())
+    transaction = SaleTransaction.query.get_or_404(sale_id)
+    shop_name = "FidPOS Store"
+
+    return render_template(
+        "receipt.html",
+        items=transaction.items,
+        total=transaction.total,
+        shop_name=shop_name,
+        date=transaction.sold_at
+    )
+
+
 
 # 📊 All sales (for report or testing)
 @bp.route("/all", methods=["GET"])
@@ -113,3 +122,48 @@ def sales_data():
         for s in sales
     ]
     return jsonify(data), 200
+
+# 🧾 Checkout (finalize sale, clear cart)
+@bp.route("/checkout", methods=["POST"])
+def checkout():
+    data = request.get_json()
+    items = data.get("items", [])
+
+    if not items:
+        return jsonify({"error": "Cart is empty"}), 400
+
+    # Create one transaction
+    transaction = SaleTransaction()
+    db.session.add(transaction)
+    db.session.flush()  # get transaction.id before commit
+
+    total_sum = 0
+
+    for item in items:
+        price = float(item.get("price", 0))
+        qty = int(item.get("qty", 1))
+        total = price * qty
+        total_sum += total
+
+        sale = Sale(
+            transaction_id=transaction.id,
+            barcode=item.get("barcode", ""),
+            item_name=item.get("name", ""),
+            price=price,
+            quantity=qty,
+            total=total
+        )
+        db.session.add(sale)
+
+        # ✅ Deduct stock
+        barcode = item.get("barcode")
+        db_item = Item.query.filter_by(barcode=barcode).first()
+        if db_item:
+            if db_item.quantity < qty:
+                return jsonify({"error": f"Not enough stock for {db_item.name}"}), 400
+            db_item.quantity = max(0, db_item.quantity - qty)
+
+    transaction.total = total_sum
+    db.session.commit()
+
+    return jsonify({"sale_id": transaction.id})

@@ -33,6 +33,7 @@ class Item(db.Model):
 class Sale(db.Model):
     __tablename__ = "sales"
     id = db.Column(db.Integer, primary_key=True)
+    transaction_id = db.Column(db.Integer, db.ForeignKey("sale_transactions.id"))
     barcode = db.Column(db.String(100), nullable=False)
     item_name = db.Column(db.String(200), nullable=False)
     price = db.Column(db.Float, nullable=False)
@@ -42,3 +43,16 @@ class Sale(db.Model):
 
     def __repr__(self):
         return f"<Sale {self.item_name} x{self.quantity}>"
+
+
+class SaleTransaction(db.Model):
+    __tablename__ = "sale_transactions"
+    id = db.Column(db.Integer, primary_key=True)
+    total = db.Column(db.Float, default=0)
+    sold_at = db.Column(db.DateTime, default=lambda: datetime.now(EAT))
+
+    # Relationship to Sale items
+    items = db.relationship("Sale", backref="transaction", lazy=True)
+    def __repr__(self):
+        return f"<SaleTransaction {self.id} - Total: {self.total}>" 
+    

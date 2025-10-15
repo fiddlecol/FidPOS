@@ -45,39 +45,48 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // 🧾 Checkout & Print
-  checkoutBtn.addEventListener("click", async () => {
-    if (cart.length === 0) {
-      alert("🛑 Cart is empty!");
-      return;
-    }
+ // 🧾 Checkout & Print
+checkoutBtn.addEventListener("click", async () => {
+  if (cart.length === 0) {
+    alert("🛑 Cart is empty!");
+    return;
+  }
 
-    try {
-      const res = await fetch("/items/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: cart })
-      });
+  try {
+    const res = await fetch("/sales/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: cart })
+    });
 
-      const data = await res.json();
-      if (res.ok) {
-        // ✅ Open receipt in new window and print
-        const receiptWindow = window.open("", "_blank");
-        receiptWindow.document.write(data.receiptHtml);
-        receiptWindow.document.close();
-        receiptWindow.print();
+    const data = await res.json();
 
-        // Clear cart after checkout
-        cart = [];
-        renderCart();
-      } else {
-        alert("⚠️ " + (data.error || "Checkout failed"));
+    if (res.ok) {
+      // ✅ If backend returns multiple sale IDs (for grouped receipts)
+      if (data.sale_ids && Array.isArray(data.sale_ids)) {
+        const saleIds = data.sale_ids.join(",");
+        window.open(`/sales/receipt/multi?ids=${saleIds}`, "_blank");
+      } 
+      // ✅ Single sale receipt
+      else if (data.sale_id) {
+        window.open(`/sales/receipt/${data.sale_id}`, "_blank");
+      } 
+      else {
+        alert("⚠️ Checkout succeeded but no receipt ID returned!");
       }
-    } catch (err) {
-      console.error("❌ Checkout error:", err);
-      alert("❌ Something went wrong. Check console.");
+
+      // Clear cart after checkout
+      cart = [];
+      renderCart();
+    } else {
+      alert("⚠️ " + (data.error || "Checkout failed"));
     }
-  });
+  } catch (err) {
+    console.error("❌ Checkout error:", err);
+    alert("❌ Something went wrong. Check console.");
+  }
+});
+
 
   // 🔁 Render Cart
   function renderCart() {
