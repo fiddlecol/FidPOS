@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, render_template
-from models import db, Item, Category
+from models import db, Item, Category, Sale
 from utils.helpers import format_currency
+from datetime import datetime
 
 bp = Blueprint("items", __name__, url_prefix="/items")
 
@@ -119,7 +120,7 @@ def checkout():
 
     total = 0
     receipt_lines = []
-    adjusted_cart = []
+    processed_items = []
 
     for i in items:
         barcode = i.get("barcode")
@@ -127,12 +128,12 @@ def checkout():
         item_in_db = Item.query.filter_by(barcode=barcode).first()
 
         if not item_in_db:
-            continue  # skip unknown items
+            continue
 
         # Cap quantity to available stock
         actual_qty = min(qty, item_in_db.quantity)
         if actual_qty <= 0:
-            continue  # skip if out of stock
+            continue
 
         price = float(item_in_db.price)
         name = item_in_db.name
@@ -140,18 +141,29 @@ def checkout():
         total += line_total
         receipt_lines.append(f"<li>{name} x{actual_qty} = {line_total:.2f} KSh</li>")
 
-        # Reduce stock
+        # Deduct stock
         item_in_db.quantity -= actual_qty
-        adjusted_cart.append({"barcode": barcode, "qty": actual_qty, "name": name, "price": price})
 
-    if not adjusted_cart:
-        return jsonify({"error": "All items are out of stock or invalid"}), 400
+        # 💾 Record sale
+        sale = Sale(
+            barcode=item_in_db.barcode,
+            item_name=name,
+            price=price,
+            quantity=actual_qty,
+            total=line_total,
+            sold_at=datetime.now()
+        )
+        db.session.add(sale)
+
+        processed_items.append({"barcode": barcode, "qty": actual_qty, "name": name, "price": price})
+
+    if not processed_items:
+        return jsonify({"error": "All items out of stock"}), 400
 
     db.session.commit()
 
-    # Generate receipt HTML
     receipt_html = "<h2>FidPOS Receipt</h2><ul>"
     receipt_html += "".join(receipt_lines)
     receipt_html += f"</ul><strong>Total: {total:.2f} KSh</strong>"
 
-    return jsonify({"receiptHtml": receipt_html, "itemsProcessed": adjusted_cart, "total": total}), 200
+    return jsonify({"receiptHtml": receipt_html, "itemsProcessed": processed_items, "total": total}), 200

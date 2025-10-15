@@ -75,3 +75,40 @@ def receipt(sale_id):
 def all_sales():
     sales = Sale.query.order_by(Sale.sold_at.desc()).all()
     return render_template("reports.html", sales=sales)
+
+
+@bp.route("/data", methods=["GET"])
+def sales_data():
+    start_date_str = request.args.get("startDate")
+    end_date_str = request.args.get("endDate")
+
+    query = Sale.query
+
+    if start_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+            query = query.filter(Sale.sold_at >= start_date)
+        except ValueError:
+            pass
+
+    if end_date_str:
+        try:
+            # Add 1 day so the end date is inclusive
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1)
+            query = query.filter(Sale.sold_at < end_date)
+        except ValueError:
+            pass
+
+    sales = query.order_by(Sale.sold_at.desc()).all()
+
+    data = [
+        {
+            "id": s.id,
+            "item": s.item_name,
+            "total": float(s.total),
+            "date": s.sold_at.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        for s in sales
+    ]
+    return jsonify(data), 200
+

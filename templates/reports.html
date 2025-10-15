@@ -55,7 +55,7 @@
 
 <script>
   async function loadReports() {
-    const res = await fetch("/reports/data");
+    const res = await fetch("/sales/data");
     const data = await res.json();
 
     const tableBody = document.getElementById("salesBody");
