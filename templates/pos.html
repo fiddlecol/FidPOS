@@ -47,10 +47,36 @@
   </div>
 
   <!-- Checkout -->
-  <div class="mt-4 text-end">
-    <button id="checkoutBtn" class="btn btn-dark fw-bold px-4">🧾 Checkout & Print</button>
+ <!-- Checkout -->
+<div class="mt-4 text-end">
+  <div class="btn-group mb-3" role="group" aria-label="Payment Method">
+    <button id="mpesaBtn" class="btn btn-success fw-bold">
+      📲 Pay with M-Pesa
+    </button>
+    <button id="cashBtn" class="btn btn-primary fw-bold">
+      💵 Pay in Cash
+    </button>
   </div>
+
+  <!-- Hidden phone input -->
+  <div id="mpesaPhoneContainer" class="mt-2" style="display: none;">
+    <input
+      type="tel"
+      id="mpesaPhone"
+      class="form-control mb-2"
+      placeholder="Enter M-Pesa phone number (e.g. 2547XXXXXXXX)"
+    />
+    <button id="confirmMpesaBtn" class="btn btn-success fw-bold">
+      ✅ Confirm & Send STK Push
+    </button>
+  </div>
+
+  <br>
+  <button id="checkoutBtn" class="btn btn-dark fw-bold px-4 mt-2">
+    🧾 Checkout & Print
+  </button>
 </div>
+
 
 <script src="/static/js/pos.js"></script>
 <script src="/static/js/cart.js"></script>

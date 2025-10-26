@@ -6,10 +6,10 @@ from pytz import timezone
 
 EAT = timezone("Africa/Nairobi")
 
-bp = Blueprint("sales", __name__, url_prefix="/sales")
+sales_bp = Blueprint("sales", __name__, url_prefix="/sales")
 
 # 🧾 POS main page
-@bp.route("/", methods=["GET"])
+@sales_bp.route("/", methods=["GET"])
 def pos_page():
     items = Item.query.all()
     return render_template("pos.html", items=items)
@@ -17,7 +17,7 @@ def pos_page():
 from utils.printer import print_receipt
 
 # 🛒 Add item to sale (scan or manual)
-@bp.route("/add", methods=["POST"])
+@sales_bp.route("/add", methods=["POST"])
 def add_sale():
     data = request.get_json() or request.form
     barcode = data.get("barcode")
@@ -67,7 +67,7 @@ def add_sale():
 
 
 # 🧾 Generate receipt (renders HTML receipt page)
-@bp.route("/receipt/<int:sale_id>")
+@sales_bp.route("/receipt/<int:sale_id>")
 def receipt(sale_id):
     transaction = SaleTransaction.query.get_or_404(sale_id)
     shop_name = "FidPOS Store"
@@ -83,13 +83,13 @@ def receipt(sale_id):
 
 
 # 📊 All sales (for report or testing)
-@bp.route("/all", methods=["GET"])
+@sales_bp.route("/all", methods=["GET"])
 def all_sales():
     sales = Sale.query.order_by(Sale.sold_at.desc()).all()
     return render_template("reports.html", sales=sales)
 
 
-@bp.route("/data", methods=["GET"])
+@sales_bp.route("/data", methods=["GET"])
 def sales_data():
     start_date_str = request.args.get("startDate")
     end_date_str = request.args.get("endDate")
@@ -124,7 +124,7 @@ def sales_data():
     return jsonify(data), 200
 
 # 🧾 Checkout (finalize sale, clear cart)
-@bp.route("/checkout", methods=["POST"])
+@sales_bp.route("/checkout", methods=["POST"])
 def checkout():
     data = request.get_json()
     items = data.get("items", [])
@@ -167,3 +167,30 @@ def checkout():
     db.session.commit()
 
     return jsonify({"sale_id": transaction.id})
+
+# Mpesa payment integration
+from .mpesa import lipa_na_mpesa
+from models import SaleTransaction
+from flask import current_app
+import uuid
+
+@sales_bp.route("/pay", methods=["POST"])
+def pay_with_mpesa():
+    data = request.get_json()
+    phone = data.get("phone")
+    sale_id = data.get("sale_id")
+
+    if not (phone and sale_id):
+        return jsonify({"error": "Missing phone or sale_id"}), 400
+
+    transaction = SaleTransaction.query.get(sale_id)
+    if not transaction:
+        return jsonify({"error": "Invalid sale"}), 404
+
+    amount = float(transaction.total)
+    callback_url = f"{request.host_url}mpesa/mpesa/callback"
+    account_ref = f"FIDPOS-{sale_id}-{uuid.uuid4().hex[:6]}"
+
+    resp = lipa_na_mpesa(phone, amount, account_ref, callback_url)
+    return jsonify(resp)
+

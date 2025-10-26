@@ -3,11 +3,11 @@ from models import db, Item, Category, Sale
 from utils.helpers import format_currency
 from datetime import datetime
 
-bp = Blueprint("items", __name__, url_prefix="/items")
+items_bp = Blueprint("items", __name__, url_prefix="/items")
 
 
 # 🧾 List all items
-@bp.route("/", methods=["GET"])
+@items_bp.route("/", methods=["GET"])
 def list_items():
     items = Item.query.all()
     data = [
@@ -25,7 +25,7 @@ def list_items():
 
 
 # ➕ Add new item
-@bp.route("/add", methods=["POST"])
+@items_bp.route("/add", methods=["POST"])
 def add_item():
     data = request.get_json() or request.form
     barcode = data.get("barcode")
@@ -55,7 +55,7 @@ def add_item():
 
 
 # ✏️ Update item
-@bp.route("/update/<int:item_id>", methods=["PUT", "POST"])
+@items_bp.route("/update/<int:item_id>", methods=["PUT", "POST"])
 def update_item(item_id):
     item = Item.query.get(item_id)
     if not item:
@@ -75,7 +75,7 @@ def update_item(item_id):
 
 
 # ❌ Delete item
-@bp.route("/delete/<int:item_id>", methods=["DELETE"])
+@items_bp.route("/delete/<int:item_id>", methods=["DELETE"])
 def delete_item(item_id):
     item = Item.query.get(item_id)
     if not item:
@@ -87,7 +87,7 @@ def delete_item(item_id):
 
 
 # 🔍 Lookup item by barcode
-@bp.route("/lookup/<barcode>", methods=["GET"])
+@items_bp.route("/lookup/<barcode>", methods=["GET"])
 def lookup_item(barcode):
     item = Item.query.filter_by(barcode=barcode).first()
     if not item:
@@ -104,7 +104,7 @@ def lookup_item(barcode):
 
 
 # 🧱 Page route (for UI)
-@bp.route("/manage", methods=["GET"])
+@items_bp.route("/manage", methods=["GET"])
 def manage_items_page():
     categories = Category.query.all()
     return render_template("items.html", categories=categories)

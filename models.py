@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
-import pytz  # ✅ add this
+import pytz  
 
 db = SQLAlchemy()
 
@@ -49,6 +49,9 @@ class SaleTransaction(db.Model):
     __tablename__ = "sale_transactions"
     id = db.Column(db.Integer, primary_key=True)
     total = db.Column(db.Float, default=0)
+    status = db.Column(db.String(20), default="pending")
+    paymenyt_method = db.Column(db.String(20))
+    paid_at = db.Column(db.DateTime)
     sold_at = db.Column(db.DateTime, default=lambda: datetime.now(EAT))
 
     # Relationship to Sale items

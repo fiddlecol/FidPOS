@@ -3,13 +3,13 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from models import db  
 
-bp = Blueprint("settings", __name__, url_prefix="/settings")
+settings_bp = Blueprint("settings", __name__, url_prefix="/settings")
 
-@bp.route("/")
+@settings_bp.route("/")
 def settings_index():
     return render_template("settings.html")
 
-@bp.route("/update", methods=["POST"])
+@settings_bp.route("/update", methods=["POST"])
 def update_settings():
     # Example placeholder — modify as needed
     new_value = request.form.get("value")

@@ -28,12 +28,13 @@ def create_app():
     migrate.init_app(app, db)
 
     # --- Register Blueprints ---
-    from routes.main import bp as main_bp
-    from routes.categories import bp as categories_bp
-    from routes.items import bp as items_bp
-    from routes.sales import bp as sales_bp
-    from routes.reports import bp as reports_bp
-    from routes.settings import bp as settings_bp
+    from routes.main import  main_bp
+    from routes.categories import categories_bp
+    from routes.items import items_bp
+    from routes.sales import sales_bp
+    from routes.reports import reports_bp
+    from routes.settings import settings_bp
+    from routes.mpesa import  mpesa_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(categories_bp)
@@ -41,6 +42,7 @@ def create_app():
     app.register_blueprint(sales_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(settings_bp)
+    app.register_blueprint(mpesa_bp)
 
     # --- Background Backup Job ---
     from utils.printer import initialize_printer

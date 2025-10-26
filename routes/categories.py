@@ -2,16 +2,16 @@
 from flask import Blueprint, jsonify, request, render_template
 from models import db, Category
 
-bp = Blueprint("categories", __name__, url_prefix="/categories")
+categories_bp = Blueprint("categories", __name__, url_prefix="/categories")
 
 # 📄 Page render
-@bp.route("/")
+@categories_bp.route("/")
 def categories_page():
     categories = Category.query.order_by(Category.id.desc()).all()
     return render_template("categories.html", categories=categories)
 
 # ➕ Add category
-@bp.route("/add", methods=["POST"])
+@categories_bp.route("/add", methods=["POST"])
 def add_category():
     data = request.get_json() or request.form
     name = data.get("name")
@@ -29,13 +29,13 @@ def add_category():
     return jsonify({"message": "Category added successfully", "id": cat.id, "name": cat.name})
 
 # 🧾 Get all categories (API)
-@bp.route("/list", methods=["GET"])
+@categories_bp.route("/list", methods=["GET"])
 def list_categories():
     cats = Category.query.order_by(Category.id.desc()).all()
     return jsonify([{"id": c.id, "name": c.name} for c in cats])
 
 # ✏️ Update category
-@bp.route("/update/<int:id>", methods=["POST"])
+@categories_bp.route("/update/<int:id>", methods=["POST"])
 def update_category(id):
     data = request.get_json() or request.form
     name = data.get("name")
@@ -49,7 +49,7 @@ def update_category(id):
     return jsonify({"message": "Category updated successfully"})
 
 # 🗑️ Delete category
-@bp.route("/delete/<int:id>", methods=["DELETE"])
+@categories_bp.route("/delete/<int:id>", methods=["DELETE"])
 def delete_category(id):
     cat = Category.query.get(id)
     if not cat:

@@ -3,14 +3,14 @@
 from flask import Blueprint, render_template, jsonify
 from models import Sale
 
-bp = Blueprint("reports", __name__, url_prefix="/reports")
+reports_bp = Blueprint("reports", __name__, url_prefix="/reports")
 
-@bp.route("/")
+@reports_bp.route("/")
 def reports_index():
     # Example: render a report summary page
     return render_template("reports.html")
 
-@bp.route("/data")
+@reports_bp.route("/data")
 def report_data():
     # Example: return sales data as JSON (adjust as needed)
     sales = Sale.query.all()

@@ -4,3 +4,5 @@ def format_currency(amount):
         return f"KSh {float(amount):,.2f}"
     except (ValueError, TypeError):
         return "KSh 0.00"
+
+# 
