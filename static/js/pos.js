@@ -128,47 +128,162 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 200);
   });
 
-  // 💰 Payment handlers
-  async function payWithMpesa(saleId) {
-    try {
-      const res = await fetch("/sales/pay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sale_id: saleId, phone: "254XXXXXXXXX" }),
-      });
-      const data = await res.json();
-      if (res.ok) alert("✅ STK Push sent. Approve payment on phone.");
-      else alert("⚠️ " + (data.error || "Payment request failed."));
-    } catch (err) {
-      console.error("❌ Payment error:", err);
+// 💰 Payment handlers
+async function payWithMpesa(saleId, phone) {
+  try {
+    const res = await fetch("/sales/pay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sale_id: saleId, phone }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert("✅ STK Push sent. Approve payment on your phone.");
+      pollPaymentStatus(saleId);
+    } else {
+      alert("⚠️ " + (data.error || "Payment request failed."));
     }
+  } catch (err) {
+    console.error("❌ Payment error:", err);
   }
+}
 
-  function payInCash(saleId) {
-    alert(`💵 Sale #${saleId} marked as cash payment.`);
-    // optional: send to backend `/sales/cash`
+// 🔁 Poll M-Pesa payment status
+async function pollPaymentStatus(saleId) {
+  const interval = setInterval(async () => {
+    const res = await fetch(`/sales/status/${saleId}`);
+    const data = await res.json();
+
+    if (data.status === "Success") {
+      clearInterval(interval);
+      alert("✅ M-Pesa payment confirmed!");
+      finalizeCheckout(saleId, "mpesa");
+    } else if (data.status === "Failed") {
+      clearInterval(interval);
+      alert("❌ Payment failed or cancelled.");
+    }
+  }, 3000);
+}
+
+// 💵 Cash payment — auto checkout immediately
+async function payInCash(saleId) {
+  try {
+    const res = await fetch("/sales/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sale_id: saleId, payment_method: "cash" }),
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("💵 Sale completed with cash.");
+      window.open(`/sales/receipt/${data.sale_id}`, "_blank");
+    } else {
+      alert("⚠️ Checkout failed: " + (data.error || "unknown error"));
+    }
+  } catch (err) {
+    console.error("❌ Cash checkout error:", err);
   }
+}
 
-  // 📲 M-Pesa button
-  mpesaBtn?.addEventListener("click", () => {
-    if (!currentSaleId) return alert("⚠️ No active sale.");
-    paymentMethod = "mpesa";
-    payWithMpesa(currentSaleId);
-  });
+// 🧾 Shared finalize function
+async function finalizeCheckout(saleId, method) {
+  try {
+    const res = await fetch("/sales/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sale_id: saleId, payment_method: method }),
+    });
+    const data = await res.json();
 
-  // 💵 Cash button
-  cashBtn?.addEventListener("click", () => {
-    if (!currentSaleId) return alert("⚠️ No active sale.");
-    paymentMethod = "cash";
-    payInCash(currentSaleId);
-  });
+    if (res.ok) {
+      window.open(`/sales/receipt/${data.sale_id}`, "_blank");
+    } else {
+      alert("⚠️ Checkout failed: " + (data.error || "unknown error"));
+    }
+  } catch (err) {
+    console.error("❌ Checkout error:", err);
+  }
+}
 
-  // 🧾 Checkout
-  checkoutBtn?.addEventListener("click", () => {
-    if (!paymentMethod) return alert("⚠️ Choose payment method first.");
-    alert(`🧾 Checkout complete. Payment: ${paymentMethod.toUpperCase()}`);
-    // optional: print receipt here
+// 📲 M-Pesa button — popup with locked 254 prefix
+mpesaBtn?.addEventListener("click", () => {
+  if (!currentSaleId) return alert("⚠️ No active sale.");
+  paymentMethod = "mpesa";
+
+  // Build popup
+  const popup = document.createElement("div");
+  popup.innerHTML = `
+    <div id="mpesaPopup" style="
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;">
+      <div style="
+        background: #fff; padding: 20px;
+        border-radius: 12px; width: 320px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        text-align: center;">
+        <h5>📱 Enter M-Pesa Number</h5>
+        <div style="display:flex; align-items:center; margin-top:12px;">
+          <span style="
+            background:#f0f0f0; padding:10px;
+            border:1px solid #ccc;
+            border-radius:5px 0 0 5px;
+            font-weight:bold;">254</span>
+          <input type="text" id="mpesaPhone"
+            placeholder="7XXXXXXXX or 1XXXXXXXX"
+            style="flex:1; padding:10px;
+            border:1px solid #ccc;
+            border-left:0; border-radius:0 5px 5px 0;
+            font-size:16px;" maxlength="9">
+        </div>
+        <div style="margin-top:18px;">
+          <button id="confirmMpesaBtn" class="btn btn-success" style="margin-right:8px;">✅ Confirm</button>
+          <button id="cancelMpesaBtn" class="btn btn-danger">❌ Cancel</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(popup);
+
+  const confirmBtn = popup.querySelector("#confirmMpesaBtn");
+  const cancelBtn = popup.querySelector("#cancelMpesaBtn");
+  const phoneInput = popup.querySelector("#mpesaPhone");
+
+  // Cancel
+  cancelBtn.addEventListener("click", () => popup.remove());
+
+  // Confirm
+  confirmBtn.addEventListener("click", () => {
+    const suffix = phoneInput.value.trim();
+    const fullPhone = `254${suffix}`;
+    const pattern = /^254(7|1)\d{8}$/;
+
+    if (!pattern.test(fullPhone)) {
+      alert("❌ Invalid number. Use 2547XXXXXXXX or 2541XXXXXXXX");
+      return;
+    }
+
+    confirmBtn.disabled = true;
+    confirmBtn.innerText = "⏳ Sending STK...";
+    payWithMpesa(currentSaleId, fullPhone);
+    setTimeout(() => popup.remove(), 800);
   });
+});
+
+// 💵 Cash button — instant checkout
+cashBtn?.addEventListener("click", () => {
+  if (!currentSaleId) return alert("⚠️ No active sale.");
+  paymentMethod = "cash";
+  payInCash(currentSaleId);
+});
+
+// 🧾 Checkout button (manual fallback)
+checkoutBtn?.addEventListener("click", () => {
+  if (!paymentMethod) return alert("⚠️ Choose payment method first.");
+  finalizeCheckout(currentSaleId, paymentMethod);
+});
 
   // Initial load
   loadItems();

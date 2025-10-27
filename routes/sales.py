@@ -126,19 +126,32 @@ def sales_data():
 # 🧾 Checkout (finalize sale, clear cart)
 @sales_bp.route("/checkout", methods=["POST"])
 def checkout():
-    data = request.get_json()
+    data = request.get_json() or {}
+    sale_id = data.get("sale_id")
+    payment_method = data.get("payment_method")
     items = data.get("items", [])
 
+    # ✅ CASE 1: Checkout by sale_id (existing transaction)
+    if sale_id and not items:
+        transaction = SaleTransaction.query.get(sale_id)
+        if not transaction:
+            return jsonify({"error": "Transaction not found"}), 404
+
+        transaction.payment_method = payment_method or "unknown"
+        transaction.sold_at = datetime.now(EAT)
+        db.session.commit()
+
+        return jsonify({"sale_id": transaction.id, "status": "ok"})
+
+    # ✅ CASE 2: Normal checkout with items list
     if not items:
         return jsonify({"error": "Cart is empty"}), 400
 
-    # Create one transaction
     transaction = SaleTransaction()
     db.session.add(transaction)
     db.session.flush()  # get transaction.id before commit
 
     total_sum = 0
-
     for item in items:
         price = float(item.get("price", 0))
         qty = int(item.get("qty", 1))
@@ -156,17 +169,18 @@ def checkout():
         db.session.add(sale)
 
         # ✅ Deduct stock
-        barcode = item.get("barcode")
-        db_item = Item.query.filter_by(barcode=barcode).first()
+        db_item = Item.query.filter_by(barcode=item.get("barcode")).first()
         if db_item:
             if db_item.quantity < qty:
                 return jsonify({"error": f"Not enough stock for {db_item.name}"}), 400
             db_item.quantity = max(0, db_item.quantity - qty)
 
     transaction.total = total_sum
+    transaction.payment_method = payment_method or "cash"
+    transaction.sold_at = datetime.now(EAT)
     db.session.commit()
 
-    return jsonify({"sale_id": transaction.id})
+    return jsonify({"sale_id": transaction.id, "status": "ok"})
 
 # Mpesa payment integration
 from .mpesa import lipa_na_mpesa

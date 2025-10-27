@@ -120,4 +120,109 @@ checkoutBtn.addEventListener("click", async () => {
       });
     });
   }
+
+    // 💸 M-Pesa Payment Flow
+  const mpesaBtn = document.getElementById("mpesaBtn");
+  const mpesaPhoneContainer = document.getElementById("mpesaPhoneContainer");
+  const confirmMpesaBtn = document.getElementById("confirmMpesaBtn");
+
+  // Step 1: show phone input when M-Pesa button clicked
+  mpesaBtn.addEventListener("click", () => {
+    mpesaBtn.style.display = "none";
+    mpesaPhoneContainer.style.display = "block";
+  });
+
+  // Step 2: confirm payment (STK push)
+  confirmMpesaBtn.addEventListener("click", async () => {
+    const phone = document.getElementById("mpesaPhone").value.trim();
+    if (!phone.match(/^2547\d{8}$/)) {
+      alert("⚠️ Enter valid M-Pesa number (e.g. 254712345678)");
+      return;
+    }
+
+    if (cart.length === 0) {
+      alert("🛒 Cart is empty!");
+      return;
+    }
+
+    const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    confirmMpesaBtn.disabled = true;
+    confirmMpesaBtn.innerText = "⏳ Sending STK Push...";
+
+    try {
+      // call backend to send STK push
+      const r = await fetch("/mpesa/stkpush", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, amount: total, items: cart }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || "STK Push failed");
+
+      pollPaymentStatus(data.CheckoutRequestID);
+    } catch (err) {
+      alert("💥 Error: " + err.message);
+      confirmMpesaBtn.disabled = false;
+      confirmMpesaBtn.innerText = "✅ Confirm & Send STK Push";
+    }
+  });
+
+  // Step 3: poll backend for payment status
+  async function pollPaymentStatus(checkoutID) {
+    const interval = setInterval(async () => {
+      const res = await fetch(`/api/mpesa/status?checkoutRequestID=${checkoutID}`);
+      const data = await res.json();
+
+      if (data.status === "Success") {
+        clearInterval(interval);
+        alert("✅ Payment successful!");
+        finalizeCheckout(data);
+      } else if (data.status === "Failed") {
+        clearInterval(interval);
+        alert("❌ Payment failed or cancelled.");
+        resetPaymentUI();
+      }
+    }, 3000);
+  }
+
+  // Step 4: finalize checkout & print receipt
+  async function finalizeCheckout(paymentData) {
+    try {
+      const res = await fetch("/sales/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: cart, payment: paymentData }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        // handle both single and multi receipt IDs like before
+        if (data.sale_ids && Array.isArray(data.sale_ids)) {
+          const ids = data.sale_ids.join(",");
+          window.open(`/sales/receipt/multi?ids=${ids}`, "_blank");
+        } else if (data.sale_id) {
+          window.open(`/sales/receipt/${data.sale_id}`, "_blank");
+        } else {
+          alert("⚠️ Checkout succeeded but no receipt ID returned!");
+        }
+
+        cart = [];
+        renderCart();
+      } else {
+        alert("⚠️ Checkout failed: " + (data.error || "unknown error"));
+      }
+    } catch (err) {
+      alert("💥 Error during checkout: " + err.message);
+    } finally {
+      resetPaymentUI();
+    }
+  }
+
+  // Step 5: reset UI if payment fails or ends
+  function resetPaymentUI() {
+    confirmMpesaBtn.disabled = false;
+    confirmMpesaBtn.innerText = "✅ Confirm & Send STK Push";
+    mpesaBtn.style.display = "block";
+    mpesaPhoneContainer.style.display = "none";
+  }
 });
