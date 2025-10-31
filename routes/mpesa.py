@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime
 import base64
 import os
+import requests
 from models import db, SaleTransaction
 import pytz
 
