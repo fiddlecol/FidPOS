@@ -14,9 +14,9 @@ mpesa_bp = Blueprint("mpesa", __name__, url_prefix="/mpesa")
 # 🔐 Config (from environment variables)
 MPESA_CONSUMER_KEY = os.getenv("MPESA_CONSUMER_KEY")
 MPESA_CONSUMER_SECRET = os.getenv("MPESA_CONSUMER_SECRET")
-MPESA_SHORTCODE = os.getenv("MPESA_SHORTCODE")  # Paybill or Till number
+MPESA_SHORTCODE = os.getenv("MPESA_SHORTCODE") 
 MPESA_PASSKEY = os.getenv("MPESA_PASSKEY")
-MPESA_BASE_URL = "https://sandbox.safaricom.co.ke"  # Change to live later
+MPESA_BASE_URL = os.getenv("MPESA_BASE_URL")
 
 
 # 🔑 Get M-Pesa access token
@@ -119,3 +119,16 @@ def mpesa_callback():
         current_app.logger.error(f"[Callback Error] {e}")
 
     return jsonify({"ResultCode": 0, "ResultDesc": "Received"})
+
+@mpesa_bp.route("/status/<sale_id>", methods=["GET"])
+def check_mpesa_status(sale_id):
+    transaction = SaleTransaction.query.filter_by(id=sale_id).first()
+    if not transaction:
+        return jsonify({"error": "Sale not found"}), 404
+
+    if transaction.status == "paid":
+        return jsonify({"status": "Success"}), 200
+    elif transaction.status == "failed":
+        return jsonify({"status": "Failed"}), 200
+    else:
+        return jsonify({"status": "Pending"}), 200

@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container py-4">
-  <h2 class="text-center fw-bold text-pink mb-4">💄 FidPOS - Beauty Shop Sales</h2>
+  <h2 class="text-center fw-bold text-pink mb-4"> FidPOS </h2>
 
   <!-- Scanner / Input -->
   <div class="card shadow-sm border-0 p-3 mb-3 rounded-3">
@@ -32,10 +32,9 @@
           <tr>
             <th>Barcode</th>
             <th>Item Name</th>
+            <th>Category</th>
             <th>Price (KSh)</th>
-            <th>Qty</th>
-            <th>Total</th>
-            <th>Action</th>
+            <th>In Stock</th>
           </tr>
         </thead>
         <tbody id="cartBody"></tbody>
@@ -58,17 +57,22 @@
   </div>
 
   <!-- Hidden phone input -->
-  <div id="mpesaPhoneContainer" class="mt-2" style="display: none;">
+<div id="mpesaPhoneContainer" class="mt-2" style="display: none;">
+  <div class="input-group">
+    <span class="input-group-text">254</span>
     <input
       type="tel"
       id="mpesaPhone"
       class="form-control mb-2"
-      placeholder="Enter M-Pesa phone number (e.g. 254XXXXXXXXX)"
+      placeholder="712345678 | 112345678"
+      maxlength="9"
     />
-    <button id="confirmMpesaBtn" class="btn btn-success fw-bold">
-      ✅ Confirm & Send STK Push
-    </button>
   </div>
+  <button id="confirmMpesaBtn" class="btn btn-success fw-bold mt-2">
+    ✅ Confirm & Send STK Push
+  </button>
+</div>
+
 
   <br>
   <button id="checkoutBtn" class="btn btn-dark fw-bold px-4 mt-2">

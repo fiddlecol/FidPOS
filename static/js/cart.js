@@ -136,7 +136,7 @@ checkoutBtn.addEventListener("click", async () => {
   confirmMpesaBtn.addEventListener("click", async () => {
     const phone = document.getElementById("mpesaPhone").value.trim();
     if (!phone.match(/^2547\d{8}$/)) {
-      alert("⚠️ Enter valid M-Pesa number (e.g. 254712345678)");
+      alert("⚠️ Enter valid M-Pesa number 712345678 | 112345678");
       return;
     }
 
@@ -170,7 +170,7 @@ checkoutBtn.addEventListener("click", async () => {
   // Step 3: poll backend for payment status
   async function pollPaymentStatus(checkoutID) {
     const interval = setInterval(async () => {
-      const res = await fetch(`/api/mpesa/status?checkoutRequestID=${checkoutID}`);
+      const res = await fetch(`/mpesa/status?checkoutRequestID=${checkoutID}`);
       const data = await res.json();
 
       if (data.status === "Success") {
